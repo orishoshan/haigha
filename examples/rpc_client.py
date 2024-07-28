@@ -5,8 +5,8 @@ demostrate how to write a rpc client
 import sys, os, uuid, time
 sys.path.append(os.path.abspath(".."))
 
-from haigha.connection import Connection
-from haigha.message import Message
+from haigha2.connection import Connection
+from haigha2.message import Message
 
 class FibonacciRpcClient(object):
     def __init__(self):
@@ -16,7 +16,7 @@ class FibonacciRpcClient(object):
 
         result = self.channel.queue.declare(exclusive=True)
         self.callback_queue = result[0]
-        print("callback_queue:", self.callback_queue)
+        print(("callback_queue:", self.callback_queue))
 
         self.channel.basic.consume(self.callback_queue, self.on_response, no_ack=True)
 
@@ -35,7 +35,7 @@ class FibonacciRpcClient(object):
 
 fibonacci_rpc = FibonacciRpcClient()
 
-print " [x] Requesting fib(30)"
+print(" [x] Requesting fib(30)")
 response = fibonacci_rpc.call(30)
-print " [.] Got %r" % (response,)
+print(" [.] Got %r" % (response,))
 

@@ -6,12 +6,12 @@ https://github.com/agoragames/haigha/blob/master/LICENSE.txt
 
 from collections import deque
 
-from haigha.classes.protocol_class import ProtocolClass
-from haigha.frames.frame import Frame
-from haigha.frames.content_frame import ContentFrame
-from haigha.frames.header_frame import HeaderFrame
-from haigha.frames.method_frame import MethodFrame
-from haigha.exceptions import ChannelError, ChannelClosed, ConnectionClosed
+from haigha2.classes.protocol_class import ProtocolClass
+from haigha2.frames.frame import Frame
+from haigha2.frames.content_frame import ContentFrame
+from haigha2.frames.header_frame import HeaderFrame
+from haigha2.frames.method_frame import MethodFrame
+from haigha2.exceptions import ChannelError, ChannelClosed, ConnectionClosed
 
 # Defined here so it's easier to test
 
@@ -62,7 +62,7 @@ class Channel(object):
         self._logger = connection.logger
 
         self._class_map = {}
-        for _id, _class in class_map.iteritems():
+        for _id, _class in class_map.items():
             impl = _class(self)
             setattr(self, impl.name, impl)
             self._class_map[_id] = impl
@@ -413,7 +413,7 @@ class Channel(object):
             self._frame_buffer = deque()
 
             # clear out other references for faster cleanup
-            for protocol_class in self._class_map.values():
+            for protocol_class in list(self._class_map.values()):
                 protocol_class._cleanup()
                 delattr(self, protocol_class.name)
             self._connection = None
