@@ -7,7 +7,7 @@ https://github.com/agoragames/haigha/blob/master/LICENSE.txt
 import struct
 import sys
 from collections import deque
-from haigha.reader import Reader
+from haigha2.reader import Reader
 
 
 class Frame(object):
@@ -71,9 +71,9 @@ class Frame(object):
                 frame = None
             except Reader.ReaderError as e:
                 # Some other format error
-                raise Frame.FormatError, str(e), sys.exc_info()[-1]
+                raise Frame.FormatError(str(e)).with_traceback(sys.exc_info()[-1])
             except struct.error as e:
-                raise Frame.FormatError, str(e), sys.exc_info()[-1]
+                raise Frame.FormatError(str(e)).with_traceback(sys.exc_info()[-1])
 
             if frame is None:
                 reader.seek(frame_start_pos)

@@ -6,12 +6,12 @@ https://github.com/agoragames/haigha/blob/master/LICENSE.txt
 
 from collections import deque
 
-from haigha.message import Message
-from haigha.writer import Writer
-from haigha.frames.method_frame import MethodFrame
-from haigha.frames.header_frame import HeaderFrame
-from haigha.frames.content_frame import ContentFrame
-from haigha.classes.protocol_class import ProtocolClass
+from haigha2.message import Message
+from haigha2.writer import Writer
+from haigha2.frames.method_frame import MethodFrame
+from haigha2.frames.header_frame import HeaderFrame
+from haigha2.frames.content_frame import ContentFrame
+from haigha2.classes.protocol_class import ProtocolClass
 
 
 class BasicClass(ProtocolClass):
@@ -186,7 +186,7 @@ class BasicClass(ProtocolClass):
         :returns: matching consumer tag or None
         :rtype: str or None
         '''
-        for (tag, func) in self._consumer_cb.iteritems():
+        for (tag, func) in self._consumer_cb.items():
             if func == consumer:
                 return tag
 
@@ -449,4 +449,4 @@ class BasicClass(ProtocolClass):
             self.channel.requeue_frames([method_frame])
             raise self.FrameUnderflow()
 
-        return (header_frame, body)
+        return header_frame, body
