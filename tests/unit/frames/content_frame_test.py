@@ -6,9 +6,9 @@ https://github.com/agoragames/haigha/blob/master/LICENSE.txt
 
 from chai import Chai
 
-from haigha.frames import content_frame
-from haigha.frames.content_frame import ContentFrame
-from haigha.frames.frame import Frame
+from haigha2.frames import content_frame
+from haigha2.frames.content_frame import ContentFrame
+from haigha2.frames.frame import Frame
 
 
 class ContentFrameTest(Chai):
@@ -29,17 +29,17 @@ class ContentFrameTest(Chai):
     def test_create_frames(self):
         itr = ContentFrame.create_frames(42, 'helloworld', 13)
 
-        frame = itr.next()
+        frame = next(itr)
         assert_true(isinstance(frame, ContentFrame))
         assert_equals(42, frame.channel_id)
         assert_equals('hello', frame.payload)
 
-        frame = itr.next()
+        frame = next(itr)
         assert_true(isinstance(frame, ContentFrame))
         assert_equals(42, frame.channel_id)
         assert_equals('world', frame.payload)
 
-        assert_raises(StopIteration, itr.next)
+        assert_raises(StopIteration, itr.__next__)
 
     def test_init(self):
         expect(Frame.__init__).args(is_a(ContentFrame), 42)

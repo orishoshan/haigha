@@ -7,19 +7,19 @@ https://github.com/agoragames/haigha/blob/master/LICENSE.txt
 from chai import Chai
 from collections import deque
 
-from haigha import channel
-from haigha.channel import Channel, SyncWrapper
-from haigha.exceptions import ChannelError, ChannelClosed, ConnectionClosed
-from haigha.classes.basic_class import BasicClass
-from haigha.classes.channel_class import ChannelClass
-from haigha.classes.exchange_class import ExchangeClass
-from haigha.classes.queue_class import QueueClass
-from haigha.classes.transaction_class import TransactionClass
-from haigha.classes.protocol_class import ProtocolClass
-from haigha.frames.method_frame import MethodFrame
-from haigha.frames.heartbeat_frame import HeartbeatFrame
-from haigha.frames.header_frame import HeaderFrame
-from haigha.frames.content_frame import ContentFrame
+from haigha2 import channel
+from haigha2.channel import Channel, SyncWrapper
+from haigha2.exceptions import ChannelError, ChannelClosed, ConnectionClosed
+from haigha2.classes.basic_class import BasicClass
+from haigha2.classes.channel_class import ChannelClass
+from haigha2.classes.exchange_class import ExchangeClass
+from haigha2.classes.queue_class import QueueClass
+from haigha2.classes.transaction_class import TransactionClass
+from haigha2.classes.protocol_class import ProtocolClass
+from haigha2.frames.method_frame import MethodFrame
+from haigha2.frames.heartbeat_frame import HeartbeatFrame
+from haigha2.frames.header_frame import HeaderFrame
+from haigha2.frames.content_frame import ContentFrame
 
 
 class SyncWrapperTest(Chai):
@@ -421,7 +421,7 @@ class ChannelTest(Chai):
     def test_requeue_frames(self):
         c = Channel(mock(), None, {})
         ch_id, c_id, m_id = 0, 1, 2
-        f = [MethodFrame(ch_id, c_id, m_id) for i in xrange(4)]
+        f = [MethodFrame(ch_id, c_id, m_id) for i in range(4)]
         c._frame_buffer = deque(f[:2])
 
         c.requeue_frames(f[2:])
@@ -597,7 +597,7 @@ class ChannelTest(Chai):
         c._pending_events = 'foo'
         c._frame_buffer = 'foo'
 
-        for val in c._class_map.values():
+        for val in list(c._class_map.values()):
             expect(val._cleanup)
         expect(c._notify_close_listeners)
 
@@ -618,7 +618,7 @@ class ChannelTest(Chai):
         c = Channel(conn, None, {})
 
         expect(conn.send_frame).args('final')
-        for val in c._class_map.values():
+        for val in list(c._class_map.values()):
             expect(val._cleanup)
 
         c._closed_cb('final')

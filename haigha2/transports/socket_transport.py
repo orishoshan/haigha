@@ -4,17 +4,17 @@ Copyright (c) 2011-2017, Agora Games, LLC All rights reserved.
 https://github.com/agoragames/haigha/blob/master/LICENSE.txt
 '''
 
-from haigha.transports.transport import Transport
+from haigha2.transports.transport import Transport
 
 import errno
 import socket
-
+import ssl
 
 class SocketTransport(Transport):
 
-    '''
+    """
     A simple blocking socket transport.
-    '''
+    """
 
     def __init__(self, *args):
         super(SocketTransport, self).__init__(*args)
@@ -24,14 +24,16 @@ class SocketTransport(Transport):
     ###
     # Transport API
     ###
-    def connect(self, (host, port), klass=socket.socket):
-        '''Connect assuming a host and port tuple.
+    def connect(self, address, klass=socket.socket):
+        """Connect assuming a host and port tuple.
 
         :param tuple: A tuple containing host and port for a connection.
         :param klass: A implementation of socket.socket.
         :raises socket.gaierror: If no address can be resolved.
         :raises socket.error: If no connection can be made.
-        '''
+        """
+        e = None
+        (host, port) = address
         self._host = "%s:%s" % (host, port)
 
         for info in socket.getaddrinfo(host, port, 0, 0, socket.IPPROTO_TCP):
@@ -41,28 +43,28 @@ class SocketTransport(Transport):
             self._sock.settimeout(self.connection._connect_timeout)
             if self.connection._sock_opts:
                 _sock_opts = self.connection._sock_opts
-                for (level, optname), value in _sock_opts.iteritems():
+                for (level, optname), value in _sock_opts.items():
                     self._sock.setsockopt(level, optname, value)
             try:
 
                 self._sock.connect(sockaddr)
 
-            except socket.error:
+            except socket.error as err:
 
                 self.connection.logger.exception(
                     "Failed to connect to %s:",
                     sockaddr,
                 )
+                e = err
                 self._sock.close()
                 continue
 
             # After connecting, switch to full-blocking mode.
             self._sock.settimeout(None)
             break
-
         else:
-
-            raise
+            if e:
+                raise e
 
     def read(self, timeout=None):
         '''
@@ -80,8 +82,7 @@ class SocketTransport(Transport):
                 self._sock.settimeout(timeout)
             else:
                 self._sock.settimeout(None)
-            data = self._sock.recv(
-                self._sock.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF))
+            data = self._sock.recv(self._sock.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF))
 
             if len(data):
                 if self.connection.debug > 1:
@@ -96,29 +97,37 @@ class SocketTransport(Transport):
             # Note that no data means the socket is closed and we'll mark that
             # below
 
-        except socket.timeout as e:
+        except ssl.SSLError as e:
+            # GC-89692 -> SSLError isn't a subclass of socket.timeout since Python3
+            # Exception
+            # └── OSError
+            #     ├── socket.error
+            #     │    └── socket.timeout
+            #     └── ssl.SSLError
+            # https://github.com/eventlet/eventlet/commit/caf9f9983a43c537efff5c4c9ff1d543af6e1220
             # Note that this is implemented differently and though it would be
             # caught as an EnvironmentError, it has no errno. Not sure whose
             # fault that is.
             return None
-
-        except EnvironmentError as e:
+        
+        except EnvironmentError as err:
             # thrown if we have a timeout and no data
-            if e.errno in (errno.EAGAIN, errno.EWOULDBLOCK, errno.EINTR):
+            if err.errno in (errno.EAGAIN, errno.EWOULDBLOCK, errno.EINTR):
                 return None
 
             self.connection.logger.exception(
-                'error reading from %s' % (self._host))
+                'error reading from %s' % self._host)
+            e = err
 
         self.connection.transport_closed(
-            msg='error reading from %s' % (self._host))
+            msg='error reading from %s' % self._host)
         if e:
-            raise
+            raise e
 
     def buffer(self, data):
-        '''
+        """
         Buffer unused bytes from the input stream.
-        '''
+        """
         if not hasattr(self, '_sock'):
             return None
 
@@ -129,9 +138,9 @@ class SocketTransport(Transport):
             self._buffer = bytearray(data)
 
     def write(self, data):
-        '''
+        """
         Write some bytes to the transport.
-        '''
+        """
         if not hasattr(self, '_sock'):
             return None
 
@@ -151,16 +160,16 @@ class SocketTransport(Transport):
             # support non-blocking in this class then this whole method has
             # to change a lot.
             self.connection.logger.exception(
-                'error writing to %s' % (self._host))
+                'error writing to %s' % self._host)
 
         self.connection.transport_closed(
-            msg='error writing to %s' % (self._host))
+            msg='error writing to %s' % self._host)
 
     def disconnect(self):
-        '''
+        """
         Disconnect from the transport. Typically socket.close(). This call is
         welcome to raise exceptions, which the Connection will catch.
-        '''
+        """
         if not hasattr(self, '_sock'):
             return None
 
